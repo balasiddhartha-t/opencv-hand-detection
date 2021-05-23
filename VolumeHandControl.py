@@ -1,9 +1,10 @@
 import cv2
 import time
 import numpy as np
-import HandTrackingModule  as htm
+import HandTrackingModule as htm
 wCam, hCam = 640, 480
 import math
+from subprocess import call
 
 
 cap = cv2.VideoCapture(0)
@@ -11,23 +12,18 @@ cap.set(3, wCam)
 cap.set(4, hCam)
 pTime = 0
 
-
-from subprocess import call
-call(["amixer", "-D", "pulse", "sset", "Master", "0%"])
-
-
 detector = htm.handDetector(detectionCon=0.6)
 
 
 while True:
     success, img = cap.read()
     img = detector.findHands(img)
-    lmlist = detector.findPosition(img, draw= False)
-    # print(lmlist)
+    lmlist = detector.findPosition(img, draw=False)
 
     if len(lmlist) != 0:
-        # print(lmlist[4], lmlist[8])
+        # getting the position for the thumb
         x1, y1 = lmlist[4][1], lmlist[4][2]
+        # getting the position for the index finger
         x2, y2 = lmlist[8][1], lmlist[8][2]
 
         cx, cy = (x1+x2)//2, (y1+y2)//2
@@ -38,7 +34,6 @@ while True:
         cv2.circle(img, (cx, cy), 15, (255, 0, 255), cv2.FILLED)
 
         length = math.hypot(x2-x1, y2-y1)
-        # print(length)
 
         # Hand Range 20 - 300
         # Volume Range 0 - 100
@@ -47,6 +42,7 @@ while True:
         if length < 20:
             cv2.circle(img, (cx, cy), 15, (0, 255, 0), cv2.FILLED)
 
+        #setting volume in Ubuntu
         call(["amixer", "-D", "pulse", "sset", "Master", str(vol)+"%"])
 
     cTime = time.time()
